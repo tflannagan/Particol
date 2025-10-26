@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Particol</title>
+     <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-gradient-start: #fdfbfb;
+            --bg-gradient-end: #ebedee;
+            --canvas-gradient-start: #ffffff;
+            --canvas-gradient-end: #f8f9fa;
+            --canvas-fade: rgba(255, 255, 255, 0.3);
+            --header-bg: rgba(255, 255, 255, 0.85);
+            --header-border: rgba(203, 213, 225, 0.3);
+            --text-primary: #4a5568;
+            --text-secondary: #718096;
+            --text-tertiary: #a0aec0;
+            --text-quaternary: #cbd5e0;
+            --stat-bg-start: #f7fafc;
+            --stat-bg-end: #edf2f7;
+            --btn-bg-start: #ffffff;
+            --btn-bg-end: #f7fafc;
+            --btn-hover-start: #f7fafc;
+            --btn-hover-end: #edf2f7;
+            --border-color: rgba(203, 213, 225, 0.4);
+            --shadow-light: rgba(0, 0, 0, 0.03);
+            --shadow-medium: rgba(0, 0, 0, 0.05);
+            --shadow-heavy: rgba(0, 0, 0, 0.08);
+        }
+
+        body.dark-mode {
+            --bg-gradient-start: #0f0f1e;
+            --bg-gradient-end: #1a1a2e;
+            --canvas-gradient-start: #0a0a14;
+            --canvas-gradient-end: #12121f;
+            --canvas-fade: rgba(10, 10, 20, 0.3);
+            --header-bg: rgba(26, 26, 46, 0.85);
+            --header-border: rgba(71, 85, 105, 0.3);
+            --text-primary: #e2e8f0;
+            --text-secondary: #cbd5e0;
+            --text-tertiary: #94a3b8;
+            --text-quaternary: #64748b;
+            --stat-bg-start: #1e293b;
+            --stat-bg-end: #0f172a;
+            --btn-bg-start: #1e293b;
+            --btn-bg-end: #0f172a;
+            --btn-hover-start: #334155;
+            --btn-hover-end: #1e293b;
+            --border-color: rgba(71, 85, 105, 0.4);
+            --shadow-light: rgba(0, 0, 0, 0.2);
+            --shadow-medium: rgba(0, 0, 0, 0.3);
+            --shadow-heavy: rgba(0, 0, 0, 0.4);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            color: var(--text-primary);
+            overflow: hidden;
+            font-weight: 300;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        #container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-height: 100vh;
+        }
+
+        #header {
+            background: var(--header-bg);
+            backdrop-filter: blur(20px);
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--header-border);
+            box-shadow: 0 1px 20px var(--shadow-light);
+            transition: all 0.3s ease;
+        }
+
+        h1 {
+            font-size: 18px;
+            font-weight: 300;
+            letter-spacing: 3px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            text-transform: lowercase;
+        }
+
+        #stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-label {
+            color: var(--text-quaternary);
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            background: linear-gradient(135deg, var(--stat-bg-start) 0%, var(--stat-bg-end) 100%);
+            padding: 4px 12px;
+            border-radius: 12px;
+            min-width: 45px;
+            text-align: center;
+            color: var(--text-primary);
+            font-weight: 400;
+            box-shadow: 0 2px 8px var(--shadow-medium);
+            transition: all 0.3s ease;
+        }
+
+        #canvas-container {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(135deg, var(--canvas-gradient-start) 0%, var(--canvas-gradient-end) 100%);
+            overflow: hidden;
+            transition: background 0.3s ease;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            filter: contrast(1.05) brightness(1.02);
+        }
+
+        #controls {
+            background: var(--header-bg);
+            backdrop-filter: blur(20px);
+            padding: 16px;
+            border-top: 1px solid var(--header-border);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            box-shadow: 0 -1px 20px var(--shadow-light);
+            transition: all 0.3s ease;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            padding: 10px 18px;
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 300;
+            border-radius: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 10px var(--shadow-medium);
+            user-select: none;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, var(--btn-hover-start) 0%, var(--btn-hover-end) 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px var(--shadow-heavy);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px var(--shadow-medium);
+        }
+
+        .btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 10px;
+        }
+
+        #particle-types {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .particle-btn {
+            position: relative;
+            padding: 12px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .particle-btn::before {
+            content: '';
+            width: 16px;
+            height: 16px;
+            border-radius: 50px;
+            background: var(--particle-color);
+            box-shadow: 0 0 10px var(--particle-color), 0 0 20px var(--particle-color);
+        }
+
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 24px;
+            }
+
+            #stats {
+                font-size: 12px;
+            }
+
+            .btn {
+                font-size: 11px;
+                padding: 11px 22px;
+            }
+
+            .btn-small {
+                font-size: 10px;
+                padding: 9px 18px;
+            }
+        }
+
+        @media (orientation: landscape) and (max-width: 768px) {
+            #container {
+                flex-direction: row;
+            }
+
+            #header {
+                border-bottom: none;
+                border-right: 1px solid var(--header-border);
+                width: 200px;
+                overflow-y: auto;
+            }
+
+            #controls {
+                border-top: none;
+                border-left: 1px solid var(--header-border);
+                width: 200px;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="header">
+            <h1>Particol</h1>
+            <div id="stats">
+                <div class="stat">
+                    <span class="stat-label">particles</span>
+                    <span class="stat-value" id="particle-count">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">types</span>
+                    <span class="stat-value" id="type-count">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">momentum</span>
+                    <span class="stat-value" id="energy-level">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">reactions</span>
+                    <span class="stat-value" id="reaction-count">0</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="canvas-container">
+            <canvas id="canvas"></canvas>
+        </div>
+        
+        <div id="controls">
+            <div id="particle-types"></div>
+            
+            <button class="btn btn-small" id="clear-btn">clear</button>
+            <button class="btn btn-small" id="theme-btn" aria-label="Toggle theme">
+                <span id="theme-icon">☀️</span>
+            </button>
+        
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let particles = [];
+        let particleTypes = new Map();
+        let selectedType = null;
+        let isPaused = false;
+        let mouseDown = false;
+        let reactionCount = 0;
+        let nextTypeId = 0;
+        let trails = [];
+        
+        const config = {
+            maxParticles: 1500,
+            particleRadius: 4,
+            forceRange: 80,
+            collisionDistance: 10,
+            friction: 0.98,
+            dt: 0.5,
+            spawnRate: 3,
+            glowIntensity: 0.6
+        };
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const rect = container.getBoundingClientRect();
+            width = rect.width;
+            height = rect.height;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        function hslToRgb(h, s, l) {
+            let r, g, b;
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+            }
+            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+        }
+
+        function createParticleType(params = {}) {
+            const id = nextTypeId++;
+            
+            const colorRanges = [
+                [0, 0.08],
+                [0.5, 0.65],
+                [0.7, 0.92]
+            ];
+            const range = colorRanges[Math.floor(Math.random() * colorRanges.length)];
+            const hue = range[0] + Math.random() * (range[1] - range[0]);
+            const rgb = hslToRgb(hue, 0.85 + Math.random() * 0.15, 0.5 + Math.random() * 0.15);
+            
+            const type = {
+                id: id,
+                name: `essence ${String.fromCharCode(65 + id)}`,
+                color: `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`,
+                colorRgb: rgb,
+                mass: params.mass || (0.5 + Math.random() * 1.5),
+                charge: params.charge || (Math.random() * 2 - 1),
+                stability: params.stability || (0.3 + Math.random() * 0.7),
+                reactivity: params.reactivity || (0.2 + Math.random() * 0.8),
+                affinities: new Map()
+            };
+            
+            particleTypes.forEach((otherType) => {
+                const affinity = Math.random() * 2 - 1;
+                type.affinities.set(otherType.id, affinity);
+                otherType.affinities.set(type.id, affinity);
+            });
+            
+            particleTypes.set(type.id, type);
+            return type;
+        }
+
+        function initializeTypes() {
+            for (let i = 0; i < 4; i++) {
+                createParticleType();
+            }
+            updateParticleTypeButtons();
+            selectedType = Array.from(particleTypes.values())[0];
+            updateSelectedButton();
+        }
+
+        function createParticle(x, y, type, vx = 0, vy = 0) {
+            if (particles.length >= config.maxParticles) {
+                return null;
+            }
+            
+            return {
+                x: x,
+                y: y,
+                vx: vx,
+                vy: vy,
+                type: type,
+                energy: 20 + Math.random() * 10,
+                age: 0,
+                id: Math.random()
+            };
+        }
+
+        function getForce(p1, p2) {
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const distSq = dx * dx + dy * dy;
+            const dist = Math.sqrt(distSq);
+            
+            if (dist > config.forceRange || dist < 0.1) {
+                return { fx: 0, fy: 0 };
+            }
+            
+            const affinity = p1.type.affinities.get(p2.type.id) || 0;
+            const chargeFactor = p1.type.charge * p2.type.charge;
+            
+            let forceMag = affinity * 0.5;
+            forceMag -= chargeFactor * 0.3;
+            forceMag *= (1 - dist / config.forceRange);
+            
+            const repulsion = config.collisionDistance * 2;
+            if (dist < repulsion) {
+                forceMag -= (repulsion - dist) / repulsion * 2;
+            }
+            
+            const nx = dx / dist;
+            const ny = dy / dist;
+            
+            return {
+                fx: nx * forceMag,
+                fy: ny * forceMag
+            };
+        }
+
+        function checkReaction(p1, p2) {
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist > config.collisionDistance) {
+                return null;
+            }
+            
+            const relVx = p2.vx - p1.vx;
+            const relVy = p2.vy - p1.vy;
+            const relSpeed = Math.sqrt(relVx * relVx + relVy * relVy);
+            const combinedEnergy = p1.energy + p2.energy;
+            
+            const reactivity = (p1.type.reactivity + p2.type.reactivity) / 2;
+            const reactionChance = reactivity * (relSpeed / 10) * (combinedEnergy / 30);
+            
+            if (Math.random() < reactionChance * 0.05) {
+                if (Math.random() < 0.3) {
+                    const existingTypes = Array.from(particleTypes.values());
+                    const newType = existingTypes[Math.floor(Math.random() * existingTypes.length)];
+                    return {
+                        type: 'transform',
+                        newType: newType,
+                        particle: Math.random() < 0.5 ? p1 : p2
+                    };
+                } else if (Math.random() < 0.5 && particleTypes.size < 12) {
+                    const newType = createParticleType({
+                        mass: (p1.type.mass + p2.type.mass) / 2 + (Math.random() - 0.5) * 0.5,
+                        charge: (p1.type.charge + p2.type.charge) / 2 + (Math.random() - 0.5) * 0.5,
+                        stability: (p1.type.stability + p2.type.stability) / 2,
+                        reactivity: (p1.type.reactivity + p2.type.reactivity) / 2
+                    });
+                    return {
+                        type: 'merge',
+                        newType: newType,
+                        particles: [p1, p2]
+                    };
+                } else if (combinedEnergy > 40) {
+                    return {
+                        type: 'split',
+                        particles: [p1, p2]
+                    };
+                }
+            }
+            
+            return null;
+        }
+
+        function applyReaction(reaction) {
+            if (reaction.type === 'transform') {
+                reaction.particle.type = reaction.newType;
+                reactionCount++;
+            } else if (reaction.type === 'merge') {
+                const [p1, p2] = reaction.particles;
+                const avgX = (p1.x + p2.x) / 2;
+                const avgY = (p1.y + p2.y) / 2;
+                const totalMass = p1.type.mass + p2.type.mass;
+                const avgVx = (p1.vx * p1.type.mass + p2.vx * p2.type.mass) / totalMass;
+                const avgVy = (p1.vy * p1.type.mass + p2.vy * p2.type.mass) / totalMass;
+                
+                const newParticle = createParticle(avgX, avgY, reaction.newType, avgVx, avgVy);
+                if (newParticle) {
+                    newParticle.energy = p1.energy + p2.energy;
+                    particles.push(newParticle);
+                }
+                
+                particles = particles.filter(p => p !== p1 && p !== p2);
+                reactionCount++;
+                updateParticleTypeButtons();
+            } else if (reaction.type === 'split') {
+                const [p1, p2] = reaction.particles;
+                const types = Array.from(particleTypes.values());
+                const totalEnergy = p1.energy + p2.energy;
+                
+                for (let i = 0; i < 2; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 2 + Math.random() * 3;
+                    const newType = types[Math.floor(Math.random() * types.length)];
+                    const newParticle = createParticle(
+                        p1.x + Math.cos(angle) * 5,
+                        p1.y + Math.sin(angle) * 5,
+                        newType,
+                        Math.cos(angle) * speed,
+                        Math.sin(angle) * speed
+                    );
+                    if (newParticle) {
+                        newParticle.energy = totalEnergy * 0.5;
+                        particles.push(newParticle);
+                    }
+                }
+                
+                particles = particles.filter(p => p !== p1 && p !== p2);
+                reactionCount++;
+            }
+        }
+
+        function update() {
+            if (isPaused) return;
+            
+            const grid = new Map();
+            const cellSize = config.forceRange;
+            
+            particles.forEach(p => {
+                const cellX = Math.floor(p.x / cellSize);
+                const cellY = Math.floor(p.y / cellSize);
+                const key = `${cellX},${cellY}`;
+                if (!grid.has(key)) {
+                    grid.set(key, []);
+                }
+                grid.get(key).push(p);
+            });
+            
+            particles.forEach(p => {
+                let fx = 0, fy = 0;
+                
+                const cellX = Math.floor(p.x / cellSize);
+                const cellY = Math.floor(p.y / cellSize);
+                
+                for (let dx = -1; dx <= 1; dx++) {
+                    for (let dy = -1; dy <= 1; dy++) {
+                        const key = `${cellX + dx},${cellY + dy}`;
+                        const cellParticles = grid.get(key);
+                        if (!cellParticles) continue;
+                        
+                        cellParticles.forEach(other => {
+                            if (p === other) return;
+                            const force = getForce(p, other);
+                            fx += force.fx;
+                            fy += force.fy;
+                        });
+                    }
+                }
+                
+                p.vx += fx * config.dt / p.type.mass;
+                p.vy += fy * config.dt / p.type.mass;
+                
+                p.vx *= config.friction;
+                p.vy *= config.friction;
+                
+                p.x += p.vx * config.dt;
+                p.y += p.vy * config.dt;
+                
+                const margin = 10;
+                if (p.x < margin) {
+                    p.x = margin;
+                    p.vx *= -0.9;
+                } else if (p.x > width - margin) {
+                    p.x = width - margin;
+                    p.vx *= -0.9;
+                }
+                if (p.y < margin) {
+                    p.y = margin;
+                    p.vy *= -0.9;
+                } else if (p.y > height - margin) {
+                    p.y = height - margin;
+                    p.vy *= -0.9;
+                }
+                
+                p.age++;
+            });
+            
+            const reactions = [];
+            particles.forEach((p1, i) => {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p2 = particles[j];
+                    const reaction = checkReaction(p1, p2);
+                    if (reaction) {
+                        reactions.push(reaction);
+                    }
+                }
+            });
+            
+            reactions.forEach(reaction => applyReaction(reaction));
+        }
+
+        function draw() {
+            const isDark = document.body.classList.contains('dark-mode');
+            
+            if (isDark) {
+                const gradient = ctx.createLinearGradient(0, 0, width, height);
+                gradient.addColorStop(0, '#0a0a14');
+                gradient.addColorStop(1, '#12121f');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, width, height);
+                
+                ctx.fillStyle = 'rgba(10, 10, 20, 0.2)';
+                ctx.fillRect(0, 0, width, height);
+            } else {
+                const gradient = ctx.createLinearGradient(0, 0, width, height);
+                gradient.addColorStop(0, '#ffffff');
+                gradient.addColorStop(1, '#f8f9fa');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, width, height);
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                ctx.fillRect(0, 0, width, height);
+            }
+            
+            particles.forEach(p => {
+                const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+                const alpha = Math.min(0.4, speed * 0.05);
+                
+                if (speed > 0.5) {
+                    const trailLength = Math.min(2, speed * 3);
+                    const gradient = ctx.createLinearGradient(
+                        p.x, p.y,
+                        p.x - p.vx * trailLength, p.y - p.vy * trailLength
+                    );
+                    gradient.addColorStop(0, `rgba(${p.type.colorRgb[0]}, ${p.type.colorRgb[1]}, ${p.type.colorRgb[2]}, ${alpha})`);
+                    gradient.addColorStop(1, `rgba(${p.type.colorRgb[0]}, ${p.type.colorRgb[1]}, ${p.type.colorRgb[2]}, 0)`);
+                    
+                    ctx.strokeStyle = gradient;
+                    ctx.lineWidth = config.particleRadius * 1.5;
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p.x - p.vx * trailLength, p.y - p.vy * trailLength);
+                    ctx.stroke();
+                }
+            });
+            
+            particles.forEach(p => {
+                const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, config.particleRadius * 3);
+                gradient.addColorStop(0, `rgba(${p.type.colorRgb[0]}, ${p.type.colorRgb[1]}, ${p.type.colorRgb[2]}, ${config.glowIntensity})`);
+                gradient.addColorStop(0.5, `rgba(${p.type.colorRgb[0]}, ${p.type.colorRgb[1]}, ${p.type.colorRgb[2]}, ${config.glowIntensity * 0.3})`);
+                gradient.addColorStop(1, `rgba(${p.type.colorRgb[0]}, ${p.type.colorRgb[1]}, ${p.type.colorRgb[2]}, 0)`);
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, config.particleRadius * 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = p.type.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, config.particleRadius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            updateStats();
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        function updateStats() {
+            document.getElementById('particle-count').textContent = particles.length;
+            document.getElementById('type-count').textContent = particleTypes.size;
+            
+            const totalMomentum = particles.reduce((sum, p) => {
+                const momentum = Math.sqrt(p.vx * p.vx + p.vy * p.vy) * p.type.mass;
+                return sum + momentum;
+            }, 0);
+            document.getElementById('energy-level').textContent = Math.floor(totalMomentum);
+            document.getElementById('reaction-count').textContent = reactionCount;
+        }
+
+        function spawnParticles(x, y) {
+            if (!selectedType) return;
+            
+            for (let i = 0; i < config.spawnRate; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 2;
+                const offsetX = (Math.random() - 0.5) * 20;
+                const offsetY = (Math.random() - 0.5) * 20;
+                
+                const particle = createParticle(
+                    x + offsetX,
+                    y + offsetY,
+                    selectedType,
+                    Math.cos(angle) * speed,
+                    Math.sin(angle) * speed
+                );
+                
+                if (particle) {
+                    particles.push(particle);
+                }
+            }
+        }
+
+        function updateParticleTypeButtons() {
+            const container = document.getElementById('particle-types');
+            container.innerHTML = '';
+            
+            particleTypes.forEach(type => {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-small particle-btn';
+                btn.style.setProperty('--particle-color', type.color);
+                btn.setAttribute('aria-label', type.name);
+                btn.onclick = () => {
+                    selectedType = type;
+                    updateSelectedButton();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function updateSelectedButton() {
+            document.querySelectorAll('.particle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            if (selectedType) {
+                const buttons = Array.from(document.querySelectorAll('.particle-btn'));
+                const index = Array.from(particleTypes.values()).indexOf(selectedType);
+                if (buttons[index]) {
+                    buttons[index].classList.add('active');
+                }
+            }
+        }
+
+        function getCanvasCoordinates(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = width / rect.width;
+            const scaleY = height / rect.height;
+            
+            let clientX, clientY;
+            if (e.touches && e.touches[0]) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            mouseDown = true;
+            const coords = getCanvasCoordinates(e);
+            spawnParticles(coords.x, coords.y);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (mouseDown) {
+                const coords = getCanvasCoordinates(e);
+                spawnParticles(coords.x, coords.y);
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            mouseDown = false;
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            mouseDown = true;
+            const coords = getCanvasCoordinates(e);
+            spawnParticles(coords.x, coords.y);
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (mouseDown) {
+                const coords = getCanvasCoordinates(e);
+                spawnParticles(coords.x, coords.y);
+            }
+        });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            mouseDown = false;
+        });
+
+        document.getElementById('clear-btn').addEventListener('click', () => {
+            particles = [];
+            reactionCount = 0;
+        });
+
+       
+
+      
+
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('theme-icon');
+            const isDark = body.classList.toggle('dark-mode');
+            themeIcon.textContent = isDark ? '🌙' : '☀️';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            
+            const canvasFade = getComputedStyle(document.documentElement).getPropertyValue('--canvas-fade').trim();
+            ctx.fillStyle = canvasFade;
+            ctx.fillRect(0, 0, width, height);
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+            
+            if (isDark) {
+                document.body.classList.add('dark-mode');
+                document.getElementById('theme-icon').textContent = '🌙';
+            }
+        }
+
+        document.getElementById('theme-btn').addEventListener('click', toggleTheme);
+
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+        });
+
+        initTheme();
+        resizeCanvas();
+        initializeTypes();
+        loop();
+    </script>
+</body>
+</html>
