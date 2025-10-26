@@ -849,6 +849,58 @@
             }
         }
 
+        function saveSimulationState() {
+            const state = {
+                particles: particles.map(p => ({
+                    x: p.x,
+                    y: p.y,
+                    vx: p.vx,
+                    vy: p.vy,
+                    typeName: p.type.name,
+                    age: p.age
+                })),
+                reactionCount: reactionCount,
+                timestamp: Date.now()
+            };
+            localStorage.setItem('particleSimState', JSON.stringify(state));
+        }
+
+        function loadSimulationState() {
+            const saved = localStorage.getItem('particleSimState');
+            if (!saved) return false;
+            
+            try {
+                const state = JSON.parse(saved);
+                particles = state.particles.map(p => {
+                    const type = Array.from(particleTypes.values()).find(t => t.name === p.typeName);
+                    if (!type) return null;
+                    return {
+                        x: p.x,
+                        y: p.y,
+                        vx: p.vx,
+                        vy: p.vy,
+                        type: type,
+                        age: p.age
+                    };
+                }).filter(p => p !== null);
+                
+                reactionCount = state.reactionCount || 0;
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function startAutoSave(intervalMs = 30000) {
+            return setInterval(() => {
+                saveSimulationState();
+            }, intervalMs);
+        }
+
+        function stopAutoSave(intervalId) {
+            clearInterval(intervalId);
+        }
+
         document.getElementById('theme-btn').addEventListener('click', toggleTheme);
 
         window.addEventListener('resize', () => {
@@ -858,6 +910,8 @@
         initTheme();
         resizeCanvas();
         initializeTypes();
+        loadSimulationState();
+        const autoSaveInterval = startAutoSave(30000);
         loop();
     </script>
 </body>
